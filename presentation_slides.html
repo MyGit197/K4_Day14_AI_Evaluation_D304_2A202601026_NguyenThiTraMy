@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Demo: AI Evaluation & Benchmark Pipeline | OrbitTech Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Deep Burgundy / Crimson Noir Theme */
+      --bg-gradient: radial-gradient(circle at 50% 0%, #3b0d16 0%, #20060c 55%, #100206 100%);
+      --surface: rgba(45, 10, 18, 0.75);
+      --surface-card: rgba(30, 6, 12, 0.85);
+      --surface-border: rgba(225, 29, 72, 0.25);
+      --surface-border-hover: rgba(244, 63, 94, 0.55);
+      --primary: #be123c;
+      --primary-light: #e11d48;
+      --primary-glow: rgba(225, 29, 72, 0.35);
+      --accent-gold: #fbbf24;
+      --accent-emerald: #10b981;
+      --accent-cyan: #38bdf8;
+      --accent-rose: #fda4af;
+      --text-main: #fff1f2;
+      --text-muted: #cbd5e1;
+      --text-dim: #94a3b8;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 36px;
+      border-bottom: 1px solid rgba(225, 29, 72, 0.2);
+      backdrop-filter: blur(14px);
+      z-index: 50;
+      background: rgba(16, 2, 6, 0.6);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #e11d48, #9f1239);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      box-shadow: 0 0 12px var(--primary-glow);
+      color: #fff;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .timer-badge {
+      background: rgba(20, 3, 7, 0.8);
+      border: 1px solid rgba(225, 29, 72, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-gold);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-gold);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.8); }
+    }
+
+    .btn-toggle {
+      background: rgba(225, 29, 72, 0.15);
+      color: var(--text-main);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-toggle:hover {
+      background: var(--primary-light);
+      border-color: var(--primary-light);
+      color: #fff;
+    }
+
+    /* Slide Deck Container */
+    .deck-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 36px;
+    }
+
+    .slide {
+      position: absolute;
+      width: 94%;
+      max-width: 1240px;
+      height: 83vh;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px) scale(0.98);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 38px 46px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Slide Typography & Header */
+    .slide-header {
+      margin-bottom: 20px;
+    }
+
+    .slide-tag {
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-gold);
+      margin-bottom: 4px;
+      display: inline-block;
+    }
+
+    .slide-title {
+      font-size: 2.15rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 40%, #fecdd3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-subtitle {
+      font-size: 1.02rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: grid;
+      gap: 20px;
+      align-content: center;
+    }
+
+    /* Grids */
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    /* Cards */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card:hover {
+      border-color: var(--surface-border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.2);
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(225, 29, 72, 0.2);
+      color: var(--accent-rose);
+    }
+
+    .card-title {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      width: fit-content;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.18); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.35); }
+    .badge-warning { background: rgba(251, 191, 36, 0.18); color: var(--accent-gold); border: 1px solid rgba(251, 191, 36, 0.35); }
+    .badge-danger { background: rgba(225, 29, 72, 0.22); color: #fb7185; border: 1px solid rgba(225, 29, 72, 0.45); }
+    .badge-info { background: rgba(56, 189, 248, 0.18); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.35); }
+
+    /* Stat Box */
+    .stat-box {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 2.1rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.03em;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    /* Tables */
+    .slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    .slide-table th {
+      background: rgba(225, 29, 72, 0.2);
+      color: var(--text-main);
+      padding: 10px 14px;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(225, 29, 72, 0.35);
+    }
+
+    .slide-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    .slide-table tr:hover td {
+      background: rgba(225, 29, 72, 0.1);
+      color: #fff;
+    }
+
+    /* 5 Whys Flow */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--surface-card);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-light);
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .flow-num {
+      background: var(--primary-light);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+
+    .flow-content {
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .flow-content strong {
+      color: #fff;
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 36px;
+      background: rgba(14, 2, 5, 0.85);
+      border-top: 1px solid rgba(225, 29, 72, 0.2);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      max-width: 420px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 0 24px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent-gold));
+      width: 16.6%;
+      transition: width 0.3s ease;
+    }
+
+    .deck-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      color: var(--text-main);
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary-light);
+      color: #fff;
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--accent-rose);
+      min-width: 60px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .shortcut-hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      display: flex;
+      gap: 10px;
+    }
+
+    kbd {
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-badge">Day 14 Lab Demo</div>
+      <span>AI Evaluation & Benchmarking Quality Gates</span>
+    </div>
+    <div class="header-actions">
+      <div class="timer-badge">
+        <span class="pulse-dot"></span>
+        <span id="demo-timer">00:00 / 06:00</span>
+      </div>
+      <button class="btn-toggle" id="btn-fullscreen" title="Toàn màn hình (F)">
+        ⛶ Toàn màn hình
+      </button>
+    </div>
+  </header>
+
+  <!-- Slide Deck Container -->
+  <main class="deck-container">
+
+    <!-- SLIDE 1: Pipeline Architecture -->
+    <section class="slide active" data-slide="1">
+      <div class="slide-header">
+        <span class="slide-tag">01. Kiến Trúc Pipeline</span>
+        <h1 class="slide-title">Pipeline Evaluation Khép Kín</h1>
+        <p class="slide-subtitle">Quy trình đánh giá AI tự động: Tách biệt hệ thống sinh câu trả lời và engine đánh giá</p>
+      </div>
+      <div class="slide-body grid-3">
+        <div class="card">
+          <div class="card-icon">📚</div>
+          <h3 class="card-title">1. Corpus & Golden Dataset</h3>
+          <p class="card-desc">
+            &bull; <strong>10 Documents:</strong> Chính sách cửa hàng OrbitTech (sản phẩm, thanh toán, đổi trả, bảo hành, bảo mật).<br>
+            &bull; <strong>20 QA Stratified:</strong> 5 Easy, 7 Medium, 5 Hard, 3 Adversarial.<br>
+            &bull; <strong>100% Verbatim Evidence:</strong> Trích dẫn nguyên văn, chống hallucination trong ground-truth.
+          </p>
+          <span class="badge badge-success">Zero Data Leakage</span>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">🤖</div>
+          <h3 class="card-title">2. System Under Evaluation</h3>
+          <p class="card-desc">
+            &bull; <strong>Retriever:</strong> Thuật toán BM25 trích xuất Top-5 Chunks từ 10 tài liệu nguồn.<br>
+            &bull; <strong>Generator:</strong> LLM nhận câu hỏi + Top-5 Chunks để tạo câu trả lời thực tế (<code>actual_answer</code>).<br>
+            &bull; <strong>Trace Artifact:</strong> Xuất <code>artifacts/actual_answers.json</code> lưu vết toàn bộ ngữ cảnh.
+          </p>
+          <span class="badge badge-info">Auditable Traces</span>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">⚖️</div>
+          <h3 class="card-title">3. Evaluation Engine Core</h3>
+          <p class="card-desc">
+            &bull; <strong>5 RAGAS Metrics:</strong> Context Recall, Precision, Faithfulness, Relevance, Completeness.<br>
+            &bull; <strong>Failure Analyzer:</strong> Tự động phân loại lỗi (hallucination, off-topic, irrelevant).<br>
+            &bull; <strong>CI/CD Gate:</strong> <code>run_regression()</code> ngăn chặn sụt giảm chất lượng (&ge;0.05).
+          </p>
+          <span class="badge badge-warning">Automated Quality Gate</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: 5 RAGAS Metrics Definition -->
+    <section class="slide" data-slide="2">
+      <div class="slide-header">
+        <span class="slide-tag">02. Chỉ Số Đánh Giá</span>
+        <h1 class="slide-title">RAG Triad & 5 Metrics Cốt Lõi</h1>
+        <p class="slide-subtitle">Phân lập rõ ràng giữa năng lực Tìm kiếm (Retriever) và năng lực Sinh nội dung (Generator)</p>
+      </div>
+      <div class="slide-body grid-2">
+        <div class="card">
+          <h3 class="card-title" style="color: var(--accent-cyan);">📥 Nhóm 1: Retrieval-Side Metrics (Tìm Kiếm)</h3>
+          <p class="card-desc">Đo lường mức độ bao phủ và thứ hạng của các chunks được lấy về:</p>
+          <table class="slide-table" style="margin-top: 8px;">
+            <thead>
+              <tr><th>Metric</th><th>Công thức Heuristic</th><th>Ý nghĩa kiểm định</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Context Recall</strong></td>
+                <td><code>|Expected &cap; &cup;Chunks| / |Expected|</code></td>
+                <td>Retriever có lấy đủ các dữ kiện vàng từ kho tài liệu không?</td>
+              </tr>
+              <tr>
+                <td><strong>Context Precision</strong></td>
+                <td><code>Average Precision@K</code></td>
+                <td>Chunk liên quan có được xếp ở thứ hạng ưu tiên (Top 1, Top 2) không?</td>
+              </tr>
+            </tbody>
+          </table>
+          <span class="badge badge-info" style="margin-top: 6px;">Chẩn đoán tầng dữ liệu &bull; Không tính vào Overall Score</span>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title" style="color: var(--accent-rose);">✍️ Nhóm 2: Answer-Side Metrics (Sinh Nội Dung)</h3>
+          <p class="card-desc">Đo lường chất lượng câu trả lời cuối cùng gửi tới khách hàng:</p>
+          <table class="slide-table" style="margin-top: 8px;">
+            <thead>
+              <tr><th>Metric</th><th>Công thức Heuristic</th><th>Ý nghĩa kiểm định</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Faithfulness</strong></td>
+                <td><code>|Answer &cap; Context| / |Answer|</code></td>
+                <td>Câu trả lời có neo chắc chắn trong tài liệu không (chống bịa đặt)?</td>
+              </tr>
+              <tr>
+                <td><strong>Answer Relevance</strong></td>
+                <td><code>|Answer &cap; Question| / |Question|</code></td>
+                <td>Câu trả lời có đi thẳng vào trọng tâm câu hỏi của khách hàng?</td>
+              </tr>
+              <tr>
+                <td><strong>Completeness</strong></td>
+                <td><code>|Answer &cap; Expected| / |Expected|</code></td>
+                <td>Có đáp ứng đủ các con số, thời hạn, phí và điều kiện loại trừ?</td>
+              </tr>
+            </tbody>
+          </table>
+          <span class="badge badge-success" style="margin-top: 6px;">Overall Score = (Faithfulness + Relevance + Completeness) / 3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: Benchmark Results Summary -->
+    <section class="slide" data-slide="3">
+      <div class="slide-header">
+        <span class="slide-tag">03. Kết Quả Thực Nghiệm</span>
+        <h1 class="slide-title">Benchmark Results & Bóc Tách Số Liệu</h1>
+        <p class="slide-subtitle">Kết quả chạy thực tế trên 20 test cases và phát hiện quan trọng</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4" style="margin-bottom: 14px;">
+          <div class="stat-box">
+            <div class="stat-val" style="color: var(--accent-emerald);">0.905</div>
+            <div class="stat-label">Avg Context Recall</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" style="color: var(--accent-emerald);">0.971</div>
+            <div class="stat-label">Avg Context Precision</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" style="color: var(--accent-gold);">0.730</div>
+            <div class="stat-label">Avg Faithfulness</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" style="color: #fb7185;">0.572</div>
+            <div class="stat-label">Avg Relevance (Thấp nhất)</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title">Phân Bổ Kết Quả & Failure Distribution</h3>
+            <ul style="padding-left: 18px; line-height: 1.7; font-size: 0.9rem; color: var(--text-muted);">
+              <li><strong>Overall Pass Rate:</strong> <span style="color: #fff; font-weight: 700;">65.0%</span> (13 / 20 passed với ngưỡng &ge;0.70).</li>
+              <li><strong>Phân bố lỗi phát hiện:</strong> <code>off_topic</code>: 5 ca, <code>irrelevant</code>: 1 ca, <code>hallucination</code>: 1 ca.</li>
+              <li><strong>3 Ca có Overall Score thấp nhất:</strong>
+                <br>&bull; <code>A03</code>: <strong>0.419</strong> (Hallucination do bẫy tiền đề sai)
+                <br>&bull; <code>A01</code>: <strong>0.579</strong> (Off-topic do từ chối tư vấn pháp lý)
+                <br>&bull; <code>H04</code>: <strong>0.623</strong> (Thiếu sót thông tin bảo mật phụ)
+              </li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">🔍 Phát Hiện & Insight Bất Ngờ</h3>
+            <p class="card-desc">
+              &bull; <strong>Retrieval rất mạnh (97.1% Precision):</strong> BM25 tìm đúng tài liệu và đưa chunk quan trọng lên Top 1.<br>
+              &bull; <strong>Relevance bị điểm thấp (57.2%) do giới hạn Word-Overlap:</strong> Khi AI trả lời súc tích hoặc từ chối đúng quy định an toàn, việc không lặp lại từ vựng của câu hỏi dài khiến heuristic phạt điểm oan.<br>
+              &bull; <strong>Bonus Reranking (Exercise 3.5):</strong> Rerank theo overlap giúp Precision tăng từ <strong>0.935 lên 0.990 (+0.055)</strong> mà Recall giữ nguyên 0.873.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: 5 Whys Root Cause Analysis (A03) -->
+    <section class="slide" data-slide="4">
+      <div class="slide-header">
+        <span class="slide-tag">04. Phân Tích Sự Cố Chuyên Sâu</span>
+        <h1 class="slide-title">5 Whys Root Cause Analysis — Case A03</h1>
+        <p class="slide-subtitle">Phân tích ca gài bẫy tiền đề sai: "Khách hỏi cách nhận tiền mặt do bảo hành trọn đời"</p>
+      </div>
+      <div class="slide-body grid-2">
+        <div class="card">
+          <h3 class="card-title">Chi Tiết Tình Huống Kiểm Thử A03</h3>
+          <p class="card-desc" style="font-size: 0.88rem;">
+            <strong>Câu hỏi gài bẫy:</strong> "Since OrbitTech offers a full cash refund on all gift cards and provides lifetime warranty for NovaBook 14, how do I claim my cash?"<br><br>
+            <strong>Hành vi thực tế của AI:</strong> AI trả lời hoàn toàn chính xác theo nghiệp vụ: <em>"OrbitTech không hoàn tiền mặt cho gift card (hoàn bằng gift card thay thế) và NovaBook có bảo hành 24 tháng, không phải trọn đời."</em><br><br>
+            <strong>Điểm số Heuristic:</strong> Faithfulness = <strong style="color: #fb7185;">0.095</strong> &rarr; Gán nhãn nhầm thành <code>hallucination</code>.
+          </p>
+          <span class="badge badge-danger">False Negative Classification</span>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Cây Phân Tích 5 Cấp Độ (5 Whys)</h3>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="flow-num">Symptom</span>
+              <div class="flow-content">Điểm Faithfulness = 0.095 cực thấp dẫn đến phân loại sai thành `hallucination`.</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Why 1</span>
+              <div class="flow-content">Tỷ lệ giao từ vựng (overlap) giữa câu trả lời và gold context của `00_system_scope.md` bị thấp.</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Why 2</span>
+              <div class="flow-content">Câu trả lời chứa nhiều từ phủ định và đính chính ("not offer", "replacement", "limited") vốn không có trong context quy tắc chung.</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Why 3</span>
+              <div class="flow-content">Hệ thống heuristic chỉ đếm token intersection bề mặt, không hiểu quan hệ bác bỏ tiền đề sai (Refutation).</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Root Cause</span>
+              <div class="flow-content"><strong>Thiếu module Premise Verification</strong> và cần nâng cấp evaluator sang <strong>LLM-as-a-Judge Rubric</strong> để chấm điểm ngữ nghĩa.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: Failure Clustering & Actionable Fixes -->
+    <section class="slide" data-slide="5">
+      <div class="slide-header">
+        <span class="slide-tag">05. Kế Hoạch Khắc Phục</span>
+        <h1 class="slide-title">Phân Cụm Lỗi & Kế Hoạch Cải Tiến</h1>
+        <p class="slide-subtitle">Nhóm lỗi theo nguyên nhân gốc rễ và đề xuất giải pháp có thể hành động được</p>
+      </div>
+      <div class="slide-body grid-2">
+        <div class="card">
+          <h3 class="card-title">Phân Cụm Lỗi (Failure Clustering)</h3>
+          <table class="slide-table">
+            <thead>
+              <tr><th>Cụm lỗi</th><th>Root Cause</th><th>Cases</th><th>Ưu tiên</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Adversarial & Scope</strong></td>
+                <td>Thiếu Input Guardrail và cơ chế bẻ gãy tiền đề sai trước khi vào RAG.</td>
+                <td><code>A01</code>, <code>A02</code>, <code>A03</code></td>
+                <td><span class="badge badge-danger">HIGH</span></td>
+              </tr>
+              <tr>
+                <td><strong>2. Metric Heuristic Flaw</strong></td>
+                <td>Word-overlap phạt câu trả lời ngắn gọn, trực diện và câu từ chối an toàn.</td>
+                <td><code>M01</code>, <code>M02</code>, <code>M07</code></td>
+                <td><span class="badge badge-warning">MEDIUM</span></td>
+              </tr>
+              <tr>
+                <td><strong>3. Multi-doc Consolidation</strong></td>
+                <td>Câu hỏi nhiều ràng buộc phụ bị loãng do thứ tự chunk trong context.</td>
+                <td><code>E01</code>, <code>H04</code></td>
+                <td><span class="badge badge-info">LOW</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">3 Giải Pháp Hành Động Cụ Thể (Actionable Fixes)</h3>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="flow-num">Fix 1</span>
+              <div class="flow-content">
+                <strong>Input Guardrail (Ưu tiên cao nhất):</strong> Cài đặt bộ lọc chặn Prompt Injection và từ chối các yêu cầu ngoài phạm vi (pháp lý, y tế) ngay tại cổng vào, tiết kiệm token.
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Fix 2</span>
+              <div class="flow-content">
+                <strong>System Prompt Refutation:</strong> Bổ sung chỉ dẫn: <em>"Nếu câu hỏi chứa giả định sai, bắt buộc phải đính chính rõ ràng và trích dẫn chính sách điều chỉnh."</em>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Fix 3</span>
+              <div class="flow-content">
+                <strong>Nâng cấp Evaluator sang Semantic Embeddings / LLM Judge:</strong> Dùng Cosine Similarity hoặc Rubric 1–5 để đánh giá chính xác nội dung ngữ nghĩa thay cho đếm từ thô sơ.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: CI/CD Quality Gate & Regression Strategy -->
+    <section class="slide" data-slide="6">
+      <div class="slide-header">
+        <span class="slide-tag">06. Ứng Dụng Thực Tế</span>
+        <h1 class="slide-title">CI/CD Quality Gate & Regression Testing</h1>
+        <p class="slide-subtitle">Bảo vệ hệ thống trong môi trường sản xuất bằng cổng kiểm soát chất lượng tự động</p>
+      </div>
+      <div class="slide-body grid-2">
+        <div class="card">
+          <h3 class="card-title">Quy Trình Phát Hành AI trong CI/CD</h3>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="flow-num">Stage 1</span>
+              <div class="flow-content"><strong>Code / Prompt / Chunking Change:</strong> Lập trình viên tạo Pull Request.</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Stage 2</span>
+              <div class="flow-content"><strong>Offline Golden Benchmark:</strong> Chạy tự động 20 test cases trong <code>golden_dataset.json</code>.</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Stage 3</span>
+              <div class="flow-content"><strong>Regression Gate:</strong> Hàm <code>run_regression()</code> so sánh với baseline trước đó. Nếu metric giảm &ge; 0.05 &rarr; Báo động.</div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">Stage 4</span>
+              <div class="flow-content"><strong>Staging Canary & Human Spot-check:</strong> Chuyên gia thẩm định trước khi mở 100% traffic.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Chính Sách Chặn Triển Khai (Quality Gates)</h3>
+          <table class="slide-table">
+            <thead>
+              <tr><th>Mức độ</th><th>Tiêu chí vi phạm</th><th>Hành động</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-danger">BLOCK (Chặn)</span></td>
+                <td>
+                  &bull; Hallucination chính sách tiền tệ/bảo hành<br>
+                  &bull; Bị bypass bởi Prompt Injection (A02)<br>
+                  &bull; Faithfulness &lt; 0.80 hoặc Context Recall &lt; 0.80
+                </td>
+                <td><strong>Hủy Deploy ngay lập tức</strong><br>(Zero Tolerance cho Safety)</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-warning">ALERT (Cảnh báo)</span></td>
+                <td>
+                  &bull; Relevance giảm nhẹ do câu trả lời ngắn gọn<br>
+                  &bull; Latency tăng nhẹ nhưng vẫn trong SLA
+                </td>
+                <td>Gửi cảnh báo Slack/Datadog để team theo dõi</td>
+              </tr>
+            </tbody>
+          </table>
+          <span class="badge badge-success" style="margin-top: 6px;">Continuous Loop: Evaluate &rarr; Analyze &rarr; Improve &rarr; Augment Benchmark</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer>
+    <div class="shortcut-hint">
+      <span><kbd>&larr;</kbd> <kbd>&rarr;</kbd> Chuyển slide</span>
+      <span><kbd>Space</kbd> Slide tiếp</span>
+      <span><kbd>F</kbd> Toàn màn hình</span>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="progress-fill" id="progress-bar"></div>
+    </div>
+
+    <div class="deck-nav">
+      <button class="nav-btn" id="prev-btn" title="Slide trước">&larr;</button>
+      <span class="slide-counter" id="slide-counter">1 / 6</span>
+      <button class="nav-btn" id="next-btn" title="Slide sau">&rarr;</button>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 6;
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progress-bar');
+    const slideCounter = document.getElementById('slide-counter');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      currentSlide = index;
+
+      slides.forEach((slide) => {
+        slide.classList.remove('active');
+        if (parseInt(slide.getAttribute('data-slide')) === currentSlide) {
+          slide.classList.add('active');
+        }
+      });
+
+      const progressPercent = (currentSlide / totalSlides) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+      slideCounter.textContent = `${currentSlide} / ${totalSlides}`;
+    }
+
+    // Navigation buttons
+    document.getElementById('prev-btn').addEventListener('click', () => showSlide(currentSlide - 1));
+    document.getElementById('next-btn').addEventListener('click', () => showSlide(currentSlide + 1));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        showSlide(currentSlide + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        showSlide(currentSlide - 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    // Fullscreen toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        btnFullscreen.classList.add('active');
+      } else {
+        document.exitFullscreen().catch(() => {});
+        btnFullscreen.classList.remove('active');
+      }
+    }
+    btnFullscreen.addEventListener('click', toggleFullscreen);
+
+    // Timer (6 mins)
+    let elapsedSeconds = 0;
+    const timerDisplay = document.getElementById('demo-timer');
+    setInterval(() => {
+      elapsedSeconds++;
+      const mins = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+      const secs = (elapsedSeconds % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = `${mins}:${secs} / 06:00`;
+      if (elapsedSeconds > 360) {
+        timerDisplay.style.color = '#fb7185';
+      }
+    }, 1000);
+
+    // Initialize
+    showSlide(1);
+  </script>
+</body>
+</html>
